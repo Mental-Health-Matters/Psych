@@ -8,9 +8,9 @@ const CustomException = require('../utils/CustomException');
 const saltRounds = 10;
 
 const authRegister = async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, username } = req.body;
   
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !username) {
       return res.status(400).send({
         error: true,
         message: 'All fields are required!',
@@ -37,12 +37,13 @@ const authRegister = async (req, res) => {
         firstName,
         lastName,
         email,
+        username,
         password: hash,
         profilePicture: uploadResult.secure_url,
       });
   
       await user.save();
-  
+      console.log(uploadResult.secure_url)
       return res.status(201).send({
         error: false,
         message: 'User registered successfully!',
@@ -128,30 +129,13 @@ const authLogout = async (req, res) => {
     });
 };
 
-const authStatus = async (req, res) => {
-    try {
-        const user = await User.findById(req.userID).select('-password');
-
-        if (!user) {
-            throw CustomException('User not found!', 404);
-        }
-
-        return res.send({
-            error: false,
-            message: 'User status fetched successfully!',
-            user,
-        });
-    } catch ({ message, status = 500 }) {
-        return res.status(status).send({
-            error: true,
-            message,
-        });
-    }
-};
+const authStatus = async () => {
+  const user = await User.findById(req.userID).select('-password');
+  res.json({ error: false, user });
+}
 
 module.exports = {
     authRegister,
     authLogin,
     authLogout,
-    authStatus,
 };

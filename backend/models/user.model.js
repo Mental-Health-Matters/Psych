@@ -12,14 +12,15 @@ const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: [true, 'FirstName is required'],
-    unique: true,
-    minlength: [3, 'Minimum FirstName length is 3 characters'],
-    maxlength: [20, 'Maximum FirstName length is 20 characters'],
   },
   lastName: {
     type: String,
     required: [true, ' LastName is required'],
-    unique: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    validate: [validator.isLowercase, 'USername must be in lower case'],
     minlength: [3, 'Minimum LastName length is 3 characters'],
     maxlength: [20, 'Maximum LastName length is 20 characters'],
   },
