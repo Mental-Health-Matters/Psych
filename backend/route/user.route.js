@@ -1,9 +1,10 @@
-// const express = require('express');
-// // const { userMiddleware } = require('../middlewares');
-// const { deleteUser } = require('../controller/user.controller');
+const express = require('express');
+// const { userMiddleware } = require('../middlewares');
+const { deleteUser, updateProfile } = require('../controller/user.controller');
 
-// const app = express.Router();
+const router = express.Router();
 
-// app.delete('/', deleteUser);
+router.delete('/', deleteUser);
 
-// module.exports = app;
+router.patch('/', authenticate, updateProfile)
+module.exports = app;

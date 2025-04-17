@@ -3,8 +3,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { JWT_SECRET, NODE_ENV } = process.env;
 const cloudinary = require('../utils/cloudinary');
-const getDataUri = require('../utils/datauri');
+const getDataUri = require('../utils/dataUri');
 const CustomException = require('../utils/CustomException');
+const generateOTP = require('../utils/generateOTP');
+const sendOTP = require('../utils/mailService');
 const saltRounds = 10;
 
 const authRegister = async (req, res) => {
@@ -32,7 +34,14 @@ const authRegister = async (req, res) => {
       if (!uploadResult?.secure_url) {
         throw CustomException('Unable to upload image to Cloudinary', 500);
       }
-  
+
+      const otp = generateOTP()
+      const mail = await sendOTP(email, otp, username)
+
+      console.log(mail)
+      if(!mail.success) {
+        throw CustomException("Unable to send OTP", 500)
+      }
       const user = new User({
         firstName,
         lastName,
@@ -40,10 +49,12 @@ const authRegister = async (req, res) => {
         username,
         password: hash,
         profilePicture: uploadResult.secure_url,
+        otp: otp,
+        otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
       });
   
       await user.save();
-      console.log(uploadResult.secure_url)
+
       return res.status(201).send({
         error: false,
         message: 'User registered successfully!',
@@ -134,8 +145,35 @@ const authStatus = async () => {
   res.json({ error: false, user });
 }
 
+const verification = async (req, res) => {
+  const {username, otp} = req.body
+  const user = await User.findOne({username})
+
+  console.log(user)
+  if (!user || !user.otp || !user.otpExpiresAt) {
+    return res.status(400).send({ error: true, message: "OTP not set or expired!" });
+  }
+  
+  if (user.otp !== otp) {
+    return res.status(400).send({ error: true, message: "Invalid OTP!" });
+  }
+  
+  if (user.otpExpiresAt < new Date()) {
+    return res.status(400).send({ error: true, message: "OTP expired!" });
+  }
+
+  user.otp = null;
+  user.otpExpiresAt = null;
+  await user.save();
+
+  return res.send({ error: false, message: "OTP verified successfully!" });
+}
+
+
 module.exports = {
     authRegister,
     authLogin,
     authLogout,
+    authStatus,
+    verification
 };

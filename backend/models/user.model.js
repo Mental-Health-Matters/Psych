@@ -29,22 +29,12 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Minimum password length is 6 characters'],
   },
-  role: {
-    type: String,
-    enum: ['student', 'teacher', 'psychologist', 'admin'],
-  },
   profilePicture: {
     type: String,
     default: '', // URL to the profile picture
   },
-  appointments: [{
-    type: mongoose.Schema.Types.ObjectId,
-    // ref: 'Appointment'
-  }],
-  articlesRead: [{
-    type: mongoose.Schema.Types.ObjectId,
-    // ref: 'Article'
-  }],
+  otp: String,
+  otpExpiresAt: Date,
 }, {timestamps: true});
 
 
