@@ -43,6 +43,8 @@ const userSchema = new mongoose.Schema({
     enum: ['google', 'local'],  // You can add other providers if needed
     required: [true, 'Authentication provider is required'],
   },
+  otp: String,
+  otpExpiresAt: Date,
 }, {timestamps: true});
 
 const User = mongoose.model('User', userSchema);
