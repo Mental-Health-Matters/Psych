@@ -6,10 +6,9 @@ const cookieParser = require('cookie-parser');
 const connect = require('./.configs/db');
 
 const authRoutes = require('./route/authenticate.route');
-const questionnaireRoutes = require('./route/questionnaire.route')
+const questionnaireRoutes = require('./route/questionnaire.route');
 
 const PORT = 3000;
-
 
 // App
 const app = express();
@@ -19,11 +18,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(compression());
-app.use(cors({
-    origin: ['http://localhost:5173'],
-    credentials: true
-}));
 
+// CORS setup (do not change existing code)
+app.use(cors({
+    origin: [
+        'http://localhost:5173', 
+        'https://reimagined-spork-x55pw7957w57cp6w6-5173.app.github.dev'  // Add GitHub Codespace URL here
+    ], 
+    credentials: true  // Allow cookies to be sent in cross-origin requests
+}));
 
 // Routes
 app.get('/', (request, response) => {
@@ -41,4 +44,4 @@ app.listen(PORT, async () => {
     catch ({ message }) {
         console.log(message);
     }
-})
+});

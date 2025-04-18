@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Blogs from '../pages/Blogs'
 import MainWindow from './MainWindow';
-import AppointmentPage from './AppointmentPage'
+import AppointmentPage from './AppointmentPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
