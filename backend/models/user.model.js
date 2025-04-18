@@ -7,7 +7,12 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
-    validate: [validator.isEmail, 'Invalid email format'],
+    validate: {
+      validator: function(value) {
+        return value.endsWith('@iiita.ac.in');
+      },
+      message: 'Email must be from the @iiita.ac.in domain',
+    },
   },
   firstName: {
     type: String,
@@ -15,39 +20,30 @@ const userSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: [true, ' LastName is required'],
+    required: [true, 'LastName is required'],
   },
   username: {
     type: String,
     required: true,
-    validate: [validator.isLowercase, 'USername must be in lower case'],
-    minlength: [3, 'Minimum LastName length is 3 characters'],
-    maxlength: [20, 'Maximum LastName length is 20 characters'],
+    validate: [validator.isLowercase, 'Username must be in lowercase'],
+    minlength: [3, 'Minimum Username length is 3 characters'],
+    maxlength: [20, 'Maximum Username length is 20 characters'],
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function() { return this.authProvider !== 'google'; },  // Only required if the authProvider is not Google
     minlength: [6, 'Minimum password length is 6 characters'],
-  },
-  role: {
-    type: String,
-    enum: ['student', 'teacher', 'psychologist', 'admin'],
   },
   profilePicture: {
     type: String,
     default: '', // URL to the profile picture
   },
-  appointments: [{
-    type: mongoose.Schema.Types.ObjectId,
-    // ref: 'Appointment'
-  }],
-  articlesRead: [{
-    type: mongoose.Schema.Types.ObjectId,
-    // ref: 'Article'
-  }],
+  authProvider: {
+    type: String,
+    enum: ['google', 'local'],  // You can add other providers if needed
+    required: [true, 'Authentication provider is required'],
+  },
 }, {timestamps: true});
-
-
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
