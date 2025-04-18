@@ -1,5 +1,7 @@
 import { Search, Calendar, Video } from 'lucide-react';
+import React
 
+from 'react';
 export default function HowItWorks() {
   return (
     <div className="py-16 bg-gray-50">
