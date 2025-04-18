@@ -7,7 +7,7 @@ import MainWindow from './MainWindow';
 import AppointmentPage from './AppointmentPage';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [section, setIsSection] = useState<"MainWindow" | "Blogs" | "Find_therapist">("MainWindow");
   if (!isLoggedIn) {
     return <WelcomePage setIsLoggedIn={setIsLoggedIn} />;

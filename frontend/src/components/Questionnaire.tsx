@@ -64,7 +64,7 @@ export default function Questionnaire({ setModalOpen, setIsLoggedIn, userId }: Q
     }
 
     const formattedAnswers = questions.map((question, index) => ({
-      questionNumber: index + 1,
+      question: questions[index].label,
       selectedAnswer: answers[question.id],
     }));
 

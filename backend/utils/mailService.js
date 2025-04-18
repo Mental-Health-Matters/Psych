@@ -8,20 +8,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendOTP = async (email, otp, username) => {
+const sendOTP = async (email, subject, text) => {
   try {
-    const subject = `Your OTP code is ${otp}`
-
-    const text = `Hi ${username},
-
-    Your OTP code is ${otp}.
-    This code will expire in 10 minutes.
-
-    If you did not request this, please ignore this email.
-
-    Thank you,
-    The Psych Team`
-
     const info = await transporter.sendMail({
       from: `"Psych" <${process.env.EMAIL_USER}>`,
       to: email,

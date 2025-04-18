@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const answerSchema = new mongoose.Schema({
-  questionNumber: {
-    type: Number,
-    required: [true, 'Question number is required']
+  question: {
+    type: String,
+    required: [true, 'Question is required']
   },
   selectedAnswer: {
     type: String,

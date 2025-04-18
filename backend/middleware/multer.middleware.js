@@ -1,4 +1,3 @@
-// middleware/multer.middleware.js
 const multer = require('multer');
 
 const storage = multer.memoryStorage();

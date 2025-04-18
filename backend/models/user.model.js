@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
   },
   profilePicture: {
     type: String,
-    default: '', // URL to the profile picture
+    default: '',
   },
   authProvider: {
     type: String,

@@ -8,6 +8,7 @@ const getDataUri = require('../utils/dataUri');
 const CustomException = require('../utils/CustomException');
 const generateOTP = require('../utils/generateOTP');
 const sendOTP = require('../utils/mailService');
+const otpMail = require('../utils/otpMail')
 const saltRounds = 10;
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -68,6 +69,7 @@ const googleLogin = async (req, res) => {
 const authRegister = async (req, res) => {
   const { firstName, lastName, email, password, username } = req.body;
 
+  // 1. Basic validation
   if (!firstName || !lastName || !email || !password || !username) {
     return res.status(400).send({
       error: true,
@@ -75,22 +77,45 @@ const authRegister = async (req, res) => {
     });
   }
 
+  // 2. Check if user already exists
+  const existing = await User.findOne({ email });
+  if (existing) {
+    return res.status(400).send({
+      error: true,
+      message: 'Email already registered!',
+    });
+  }
+
+  // 3. Must have uploaded file
+  if (!req.file) {
+    return res.status(400).send({
+      error: true,
+      message: 'Profile picture is required',
+    });
+  }
+
   try {
+    // 4. Hash password
     const hash = await bcrypt.hash(password, saltRounds);
 
-    if (!req.file) {
-      throw CustomException('Profile picture is required', 400);
-    }
-
+    // 5. Upload to Cloudinary
     const fileUri = getDataUri(req.file);
     const uploadResult = await cloudinary.uploader.upload(fileUri.content, {
       resource_type: 'image',
     });
-
     if (!uploadResult?.secure_url) {
       throw CustomException('Unable to upload image to Cloudinary', 500);
     }
 
+    // 6. Generate & send OTP
+    const otp = generateOTP();
+    const { subject, text } = otpMail(otp, username);
+    const mail = await sendOTP(email, subject, text);
+    if (!mail.success) {
+      throw CustomException('Unable to send OTP', 500);
+    }
+
+    // 7. Create user with OTP fields
     const user = new User({
       firstName,
       lastName,
@@ -98,10 +123,13 @@ const authRegister = async (req, res) => {
       username,
       password: hash,
       profilePicture: uploadResult.secure_url,
+      otp,
+      otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
     await user.save();
-    console.log(uploadResult.secure_url);
+
+    // 8. Success response
     return res.status(201).send({
       error: false,
       message: 'User registered successfully!',
@@ -110,70 +138,15 @@ const authRegister = async (req, res) => {
   } catch (error) {
     console.error('Registration Error:', error);
 
-    if (error.message.includes('E11000')) {
+    // Handle duplicate‐key errors (e.g. username collision)
+    if (error.code === 11000) {
       return res.status(400).send({
         error: true,
-        message: 'All fields are required!',
-      });
-    }
-  
-    try {
-      const hash = await bcrypt.hash(password, saltRounds);
-  
-      if (!req.file) {
-        throw CustomException('Profile picture is required', 400);
-      }
-  
-      const fileUri = getDataUri(req.file);
-      const uploadResult = await cloudinary.uploader.upload(fileUri.content, {
-        resource_type: 'image',
-      });
-  
-      if (!uploadResult?.secure_url) {
-        throw CustomException('Unable to upload image to Cloudinary', 500);
-      }
-
-      const otp = generateOTP()
-      const mail = await sendOTP(email, otp, username)
-
-      console.log(mail)
-      if(!mail.success) {
-        throw CustomException("Unable to send OTP", 500)
-      }
-      const user = new User({
-        firstName,
-        lastName,
-        email,
-        username,
-        password: hash,
-        profilePicture: uploadResult.secure_url,
-        otp: otp,
-        otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      });
-  
-      await user.save();
-
-      return res.status(201).send({
-        error: false,
-        message: 'User registered successfully!',
-        userId: user._id,
-      });
-    } catch (error) {
-      console.error('Registration Error:', error);
-  
-      if (error.message.includes('E11000')) {
-        return res.status(400).send({
-          error: true,
-          message: 'Email already registered!',
-        });
-      }
-  
-      return res.status(error.status || 500).send({
-        error: true,
-        message: error.message || 'Something went wrong!',
+        message: 'Username or email already in use!',
       });
     }
 
+    // Generic fallback
     return res.status(error.status || 500).send({
       error: true,
       message: error.message || 'Something went wrong!',
@@ -183,6 +156,7 @@ const authRegister = async (req, res) => {
 
 const authLogin = async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     return res.status(400).send({
       error: true,
@@ -204,17 +178,13 @@ const authLogin = async (req, res) => {
 
     const { password: pwd, ...data } = user._doc;
 
-    const token = jwt.sign(
-      { _id: user._id },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
 
     const cookieConfig = {
       httpOnly: true,
       sameSite: NODE_ENV === 'production' ? 'none' : 'strict',
       secure: NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       path: '/',
     };
 
@@ -233,6 +203,8 @@ const authLogin = async (req, res) => {
     });
   }
 };
+
+
 
 const authLogout = async (req, res) => {
   return res.clearCookie('accessToken', {
@@ -269,6 +241,11 @@ const verification = async (req, res) => {
   user.otp = null;
   user.otpExpiresAt = null;
   await user.save();
+
+  const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+  res
+    .cookie('accessToken', token, COOKIE_CONFIG)
+    .send({ error: false, message: 'Email verified—logged in!', user: { ...user._doc, password: undefined } });
 
   return res.send({ error: false, message: "OTP verified successfully!" });
 }

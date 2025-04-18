@@ -273,7 +273,7 @@ export default function PsychWebsite({setIsLoggedIn} : WelcomePageProps) {
       <Footer />
 
       {/* Login Modal */}
-      <AnimatePresence>{modalOpen === "login" && <Login setModalOpen={setModalOpen} setIsLoggedIn={setIsLoggedIn}/>}</AnimatePresence>
+      <AnimatePresence>{modalOpen === "login" && <Login setModalOpen={setModalOpen} setIsLoggedIn={setIsLoggedIn} setUserId={setUserId}/>}</AnimatePresence>
       {/* Register Modal */}
       <AnimatePresence>{modalOpen === "register" && <Register setModalOpen={setModalOpen} setUserId={setUserId}/>}</AnimatePresence>
       {/* Questionnaire Modal */}

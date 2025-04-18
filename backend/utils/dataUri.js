@@ -1,4 +1,3 @@
-// utils/dataUri.js
 const DataUriParser = require('datauri/parser');
 const path = require('path');
 const parser = new DataUriParser();
