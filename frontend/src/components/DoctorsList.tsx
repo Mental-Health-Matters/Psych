@@ -2,7 +2,7 @@ import React from 'react';
 import DoctorCard from './DoctorCard';
 import { Doctor } from './Types';
 import { motion } from 'framer-motion';
-import { doctors } from './Login';
+import { doctors } from './DoctorsData';
 
 interface DoctorsListProps {
   onSelectDoctor: (doctor: Doctor) => void;

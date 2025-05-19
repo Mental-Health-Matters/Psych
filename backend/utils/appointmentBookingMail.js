@@ -33,7 +33,7 @@ function appointmentBookingMailPsychiatrist(studentName, selectedDate, selectedT
   - Time: ${selectedTime}
   
   Preliminary Questionnaire (Student Response):
-  ${questionnaireResponses.map((q, i) => `${i + 1}. ${q.question}\nAnswer: ${q.answer}\n`).join('\n')}
+  ${questionnaireResponses.map((q, i) => `${i + 1}. ${q.question}\nAnswer: ${q.selectedAnswer}\n`).join('\n')}
   
   Please review the above information prior to your consultation. Feel free to reach out if you need any additional context.
   

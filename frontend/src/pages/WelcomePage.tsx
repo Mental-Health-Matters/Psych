@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import FAQ from '../components/FAQ';
 import Testimonials from '../components/Testimonials';
 import FeaturesSection from '../components/Features';
+import OTPVerification from '../components/OTPVerification';
 
 type WelcomePageProps = {
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
@@ -17,7 +18,7 @@ export default function PsychWebsite({setIsLoggedIn} : WelcomePageProps) {
   const [activeSection, setActiveSection] = useState("home");
   const [userId, setUserId] = useState("");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [modalOpen, setModalOpen] = useState<"register" | "questionnaire" | "login" | null>(null);
+  const [modalOpen, setModalOpen] = useState<"register" | "questionnaire" | "login" | "verification" | null>(null);
 
   // References for scroll
   const homeRef = useRef<HTMLDivElement>(null);
@@ -276,6 +277,20 @@ export default function PsychWebsite({setIsLoggedIn} : WelcomePageProps) {
       <AnimatePresence>{modalOpen === "login" && <Login setModalOpen={setModalOpen} setIsLoggedIn={setIsLoggedIn} setUserId={setUserId}/>}</AnimatePresence>
       {/* Register Modal */}
       <AnimatePresence>{modalOpen === "register" && <Register setModalOpen={setModalOpen} setUserId={setUserId}/>}</AnimatePresence>
+      {/* Verification Modal */}
+      <AnimatePresence>
+        {modalOpen === "verification" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <OTPVerification setModalOpen={setModalOpen} userId = {userId}/>
+          </motion.div>
+        )}
+</AnimatePresence>
+
       {/* Questionnaire Modal */}
       <AnimatePresence>{modalOpen === "questionnaire" && <Questionnaire setModalOpen={setModalOpen} setIsLoggedIn={setIsLoggedIn} userId={userId}/>}</AnimatePresence>
       </div>

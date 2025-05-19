@@ -5,20 +5,19 @@ const authenticate = require('../middleware/authenticate.middleware')
 const router = express.Router();
 
 // Register
-router.post('/register', upload.single('profilePicture'), authRegister, authController.authRegister);
+router.post('/register', upload.single('profilePicture'), authRegister);
 
-router.post('/verify', verification)
+//Verify OTP
+router.post('/verify-otp', verification)
 
 // Login
 router.post('/login', authLogin);
-
-
 
 // Logout
 router.post('/logout', authLogout);
 
 // Google Login
-router.post('/googlelogin', googleLogin);
+// router.post('/googlelogin', googleLogin);
 
 router.get('/me', authenticate, authStatus);
 

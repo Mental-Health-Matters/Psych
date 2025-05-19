@@ -14,7 +14,7 @@ type Question = {
 type QuestionnaireProps = {
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
   userId: string;
-  setModalOpen: React.Dispatch<React.SetStateAction<"register" | "questionnaire" | null>>;
+  setModalOpen: React.Dispatch<React.SetStateAction<"questionnaire" | null>>;
 };
 
 export default function Questionnaire({ setModalOpen, setIsLoggedIn, userId }: QuestionnaireProps) {

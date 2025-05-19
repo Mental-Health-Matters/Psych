@@ -5,9 +5,11 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connect = require('./.configs/db');
 
+const userRoutes = require('./route/user.route')
 const authRoutes = require('./route/authenticate.route');
 const questionnaireRoutes = require('./route/questionnaire.route')
 const appointmentRoutes = require('./route/appointments.route')
+
 const PORT = 3000;
 
 // App
@@ -36,7 +38,7 @@ app.get('/', (request, response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/questionnaire', questionnaireRoutes);
 app.use('/api/appointments', appointmentRoutes)
-
+app.use('/api/users', userRoutes)
 
 app.listen(PORT, async () => {
     try {

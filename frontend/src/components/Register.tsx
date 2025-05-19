@@ -6,7 +6,7 @@ import React from 'react';
 
 
 type RegisterProps = {
-  setModalOpen: React.Dispatch<React.SetStateAction<"register" | "questionnaire" | "login" | null>>;
+  setModalOpen: React.Dispatch<React.SetStateAction<"register" | "questionnaire" | "login" | "verification" | null>>;
   setUserId: React.Dispatch<React.SetStateAction<string>>;
 };
 
@@ -14,11 +14,13 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    profilePicture: null as File | null,  // added for profile upload
+    profilePicture: null as File | null,
   });
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, files } = e.target;
@@ -62,6 +64,7 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
     data.append('lastName', formData.lastName);
     data.append('email', formData.email);
     data.append('password', formData.password);
+    data.append('username', formData.username);
     if (formData.profilePicture) {
       data.append('profilePicture', formData.profilePicture);
     }
@@ -77,7 +80,8 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
 
       const userId = res.data.userId;
       setUserId(userId);
-      setModalOpen("questionnaire");
+      setModalOpen("verification");
+      console.log("Registration successful:", res.data);
     } catch (err: any) {
       console.error("Registration error:", err.response?.data || err.message);
       alert(err.response?.data?.message || "Registration failed.");
@@ -139,8 +143,21 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-gray-700 mb-2 text-sm font-medium">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  required
+                />
+              </div>
             </div>
-
+            
             <div>
               <label className="block text-gray-700 mb-2 text-sm font-medium">
                 Email Address

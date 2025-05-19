@@ -1,197 +1,253 @@
-// EditProfileDetails.tsx
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useEffect, useState } from "react";
+import { User, Edit, Save, X } from "lucide-react";
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 
-const EditProfileDetails: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
-  const [modalOpen, setModalOpen] = useState(false);
+interface EditProfileDetailsProps {
+  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-  const [formData, setFormData] = useState({
-    firstName: user?.given_name || '',
-    lastName: user?.family_name || '',
-    email: user?.email || '',
-    password: '',
-    confirmPassword: '',
-    profilePictureUrl: user?.picture || '',
-  });
+function EditProfileDetails ({ setIsModalOpen } : EditProfileDetailsProps) {
 
-  const [newProfilePic, setNewProfilePic] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Questions for questionnaire section
+  interface Question {
+    id: number;
+    question: string;
+    answer: string;
+    isEditing?: boolean;
+  }
+  const [questions, setQuestions] = useState<Question[]>([]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated || !user) return null;
+  // User profile data
+  interface Profile {
+    email?: string;
+    username?: string;
+    profilePicture?: string;
+  }
+  const [profile, setProfile] = useState<Profile>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  //Fetch and decoded User Id from JWT token
+  const token = Cookies.get("accessToken");
+  const decodedToken = token ? jwtDecode(token) : null;
+  const userId = decodedToken ? decodedToken["_id"] : null;
+
+  // send userId to backend to get user data
+  useEffect(() => {
+  async function getUserData(userId: string) {
+    
+      const response = await axios.get(`http://localhost:3000/api/users/${userId}`)
+      const userData = response.data.data.user;
+      const questionnaire = response.data.data.questionnaire;
+
+      setProfile({
+        email: userData.email,
+        username: userData.username,
+        profilePicture: userData.profilePicture,
+      });
+
+      const questionsData = questionnaire.answers.map((q: any, index: number) => ({
+        id: index,
+        question: q.question,
+        answer: q.selectedAnswer,
+      }));
+
+      setQuestions(questionsData);
+    }
+
+    getUserData(userId);
+  }, [userId]);
+
+  
+  // State for edited answer
+  const [editedAnswer, setEditedAnswer] = useState("");
+  
+  // State to track if there are unsaved changes
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Handle starting to edit a question
+  const handleEditQuestion = (id: number) => {
+    setQuestions(questions.map(q => {
+      if (q.id === id) {
+        setEditedAnswer(q.answer);
+        return { ...q, isEditing: true };
+      }
+      return { ...q, isEditing: false };
+    }));
+    setHasChanges(true);
   };
 
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.size <= 2 * 1024 * 1024 && (file.type === 'image/jpeg' || file.type === 'image/png')) {
-      setNewProfilePic(file);
-      setFormData(prev => ({ ...prev, profilePictureUrl: URL.createObjectURL(file) }));
-    } else {
-      alert('Only JPEG/PNG images under 2MB are allowed!');
-    }
+  // Handle saving a question edit
+  const handleSaveQuestion = (id: number) => {
+    setQuestions(questions.map(q => {
+      if (q.id === id) {
+        return { ...q, answer: editedAnswer, isEditing: false };
+      }
+      return q;
+    }));
   };
 
-  const validateForm = (): boolean => {
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    if (formData.password && formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return false;
-    }
-    setError(null);
-    return true;
+  // Handle canceling a question edit
+  const handleCancelEdit = (id: number) => {
+    setQuestions(questions.map(q => {
+      if (q.id === id) {
+        return { ...q, isEditing: false };
+      }
+      return q;
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      const updatedData = {
-        username: `${formData.firstName}-${formData.lastName}`,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        profilePictureUrl: formData.profilePictureUrl,
+
+  // Handler for saving changes
+  const handleApplyChanges = async () => {
+    setProfile({
+      ...profile,
+    });
+    setHasChanges(false)
+
+    const sendQuestions = questions.map((q) => {
+      return {
+        question: q.question,
+        selectedAnswer: q.answer,
       };
+    });
 
-      console.log('Updated profile:', updatedData);
-      // Later: Send this data to your backend API
-      setModalOpen(false);
-    }
+    const details = await axios.patch(
+      `http://localhost:3000/api/users/${userId}`,
+      {
+        profile: profile,
+        questionnaire: sendQuestions
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    )
+
+    setIsModalOpen(false)
+
+    
+    if(details)
+      return alert("Changes applied successfully!")
+    return alert("Changes Unsuccessful")
   };
+
 
   return (
-    <div className="text-center p-6">
-      <img
-        src={formData.profilePictureUrl}
-        alt={formData.firstName}
-        className="w-24 h-24 rounded-full mx-auto mb-4"
-      />
-      <h2 className="text-xl font-semibold">{`${formData.firstName} ${formData.lastName}`}</h2>
-      <p className="text-gray-600">{formData.email}</p>
-
-      <button
-        onClick={() => setModalOpen(true)}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Edit Profile
-      </button>
-
-      {modalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setModalOpen(false);
-          }}
-        >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            className="bg-white rounded-xl p-8 max-w-md w-full"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Edit Profile Details</h3>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="hover:bg-gray-100 p-2 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 hover:text-gray-800" />
-              </button>
+    <div className="flex flex-col h-screen bg-blue-50">
+      {/* Fixed header */}
+      <header className="bg-blue-700 text-white p-4 sticky top-0 z-10">
+        <h1 className="text-2xl font-bold">User Profile</h1>
+      </header>
+      
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md mb-6">
+            {/* Section 1: Profile Information */}
+            <div className="p-6 border-b border-blue-100 ml-3">
+              <h2 className="text-xl font-semibold text-blue-800 mb-4 ml-12">Profile</h2>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="flex flex-col items-center ml-12">
+                  <div className="relative">
+                    <img
+                      src={profile.profilePicture}
+                      alt="User avatar"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-blue-200"
+                    />
+                </div>
+                <br></br>
+                <div className="flex-grow">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-blue-600">Username</label>
+                    <div className="flex items-center mt-1">
+                      <User size={18} className="text-blue-400 mr-2" />
+                      <span className="text-gray-800">{profile.username}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-600">Email</label>
+                    <span className="text-gray-800" aria-disabled>{profile.email}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
+            {/* Section 2: Questionnaire */}
+            <br></br>
+            <br></br>
+            <div className="p-6 border-b border-blue-100">
+              <h2 className="text-xl font-semibold text-blue-800 mb-4">Questionnaire</h2>
+              <div className="space-y-4">
+                {questions.map((q) => (
+                  <div key={q.id} className="bg-blue-50 p-4 rounded-md">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-medium text-blue-700">{q.question}</h3>
+                      {!q.isEditing && (
+                        <button 
+                          onClick={() => handleEditQuestion(q.id)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      )}
+                    </div>
+                    
+                    {q.isEditing ? (
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          value={editedAnswer}
+                          onChange={(e) => setEditedAnswer(e.target.value)}
+                          className="w-full border border-blue-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <div className="flex justify-end mt-2 space-x-2">
+                          <button
+                            onClick={() => handleCancelEdit(q.id)}
+                            className="px-2 py-1 text-sm text-blue-700 border border-blue-700 rounded hover:bg-blue-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleSaveQuestion(q.id)}
+                            className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-gray-700">{q.answer}</p>
+                    )}
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  readOnly
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Confirm Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Profile Picture</label>
-                <input
-                  type="file"
-                  accept="image/jpeg, image/png"
-                  onChange={handleProfilePicChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                />
-              </div>
-
-              <div className="pt-4">
+              {/* Buttons */}
+              <div className="flex justify-end space-x-4 mt-4">
                 <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium"
+                  onClick={handleApplyChanges}
+                  disabled={!hasChanges}
+                  className={`flex items-center px-4 py-2 rounded-md ${
+                    hasChanges 
+                      ? "bg-blue-700 text-white hover:bg-blue-800" 
+                      : "bg-blue-300 text-white cursor-not-allowed"
+                  }`}
                 >
-                  Save Changes
+                  <Save size={16} className="mr-2" />
+                  Apply Changes
                 </button>
               </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Fixed footer */}
+      <footer className="bg-blue-700 text-white p-4 text-center">
+        <p className="text-sm">© 2025 Profile Manager</p>
+      </footer>
     </div>
   );
 };

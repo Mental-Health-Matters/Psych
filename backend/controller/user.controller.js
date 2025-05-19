@@ -1,5 +1,6 @@
-const { User } = require('../models');
-const { CustomException } = require('../utils');
+const  User  = require('../models/user.model');
+const  CustomException  = require('../utils/CustomException');
+const Questionnaire = require('../models/questionnaire.model');
 
 const deleteUser = async (request, response) => {
     const { _id } = request.params;
@@ -27,28 +28,88 @@ const deleteUser = async (request, response) => {
 
 const updateProfile = async (req, res) => {
     try {
-        const updates = req.body;
-    
-        const user = await User.findByIdAndUpdate(req.userID, updates, { new: true });
-    
-        if (user) {
-            return res.status(200).json({
-                error: false,
-                message: "User profile updated successfully!",
-                user,
-            });
+        const { userId } = req.params;
+
+        if (!userId) {
+            throw CustomException("User ID is required", 400);
         }
-    
-        throw CustomException("Unable to update details", 500);
-    } catch (error) {
-        return res.status(error.status || 500).json({
+
+        const { profile, questionnaire } = req.body
+        
+        if (!profile || !questionnaire) {
+            throw CustomException("Profile and questionnaire data are required", 400);
+        }
+        
+        const questions = {
+            userId : userId,
+            answer : [
+                ...questionnaire.map((item) => {
+                    return {
+                        question: item.question,
+                        selectedAnswer: item.selectedAnswer
+                    }
+                })
+            ]
+        }
+
+        
+        const user = await User.findByIdAndUpdate(userId, profile, {new: true, runValidators:true})
+        const ques = await Questionnaire.findOneAndUpdate({userId: userId}, {
+            $set: {
+                answers: questions.answer
+            }
+        }, {new: true})
+
+        return res.status(200).json({
+            error: false,
+            message: "Updated successfully",
+            data: {
+                user,
+                ques
+            }
+        })
+
+    } catch({message, status = 500}) {
+        return response.status(status).send({
             error: true,
-            message: error.message || "Something went wrong!",
-        });
+            message
+        })
     }
 };
 
+const getUserDetails = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            throw CustomException("User ID is required", 400);
+        }
+
+        const details = await User.findById(userId)
+        const questionnaire = await Questionnaire.findOne({ userId });
+
+        
+        if (!details || !questionnaire) {
+            throw CustomException("User not found", 404);
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "User details fetched successfully!",
+            data : {
+                user: details,
+                questionnaire: questionnaire,
+            }
+        });
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            error: true,
+            message: error.message || "Internal server error",
+        });
+    }
+}
+
 module.exports = {
     deleteUser,
-    updateProfile
+    updateProfile,
+    getUserDetails,
 }

@@ -1,8 +1,7 @@
-const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/user.model");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { JWT_SECRET, NODE_ENV, GOOGLE_CLIENT_ID } = process.env;
+const { JWT_SECRET, NODE_ENV} = process.env;
 const cloudinary = require('../utils/cloudinary');
 const getDataUri = require('../utils/dataUri');
 const CustomException = require('../utils/CustomException');
@@ -10,60 +9,12 @@ const generateOTP = require('../utils/generateOTP');
 const sendOTP = require('../utils/mailService');
 const otpMail = require('../utils/otpMail')
 const saltRounds = 10;
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-const googleLogin = async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    // Verify the ID token with Google OAuth2
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_CLIENT_ID,
-    });
-
-    // Get user profile from Google payload
-    const payload = ticket.getPayload();
-    const { email, given_name, family_name, picture } = payload;
-
-    // Generate username by combining first and last names
-    const username = `${given_name}${family_name}`;
-
-    // Check if the user already exists in the database
-    let user = await User.findOne({ email });
-    if (!user) {
-      // If the user doesn't exist, create a new user in the database
-      user = await User.create({
-        email,
-        name: `${given_name} ${family_name}`,
-        profilePicture: picture,
-        username: username,  // Store the generated username
-        password: null,
-        authProvider: "google",  // Specify the provider as 'google'
-      });
-    }
-
-    // Remove password and send user data with the JWT token
-    const { password, ...data } = user._doc;
-    const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-
-    // Set cookie and send response
-    const cookieConfig = {
-      httpOnly: true,
-      sameSite: NODE_ENV === 'production' ? 'none' : 'strict',
-      secure: NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7,  // 7 days
-      path: '/',
-    };
-
-    return res
-      .cookie('accessToken', token, cookieConfig)  // Set the access token in the cookie
-      .status(200)
-      .json({ user: data });  // Send user data as response
-  } catch (error) {
-    console.error("Google login error:", error);
-    res.status(401).json({ message: "Google login failed" });
-  }
+const COOKIE_CONFIG = {
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 1000 * 60 * 60 * 24 * 7,
+  path: '/',
 };
 
 const authRegister = async (req, res) => {
@@ -78,13 +29,17 @@ const authRegister = async (req, res) => {
   }
 
   // 2. Check if user already exists
-  const existing = await User.findOne({ email });
+  const existing = await User.findOne({
+    $or: [{ email }, { username }]
+  });
+  
   if (existing) {
     return res.status(400).send({
       error: true,
-      message: 'Email already registered!',
+      message: 'Email or Username already registered!',
     });
   }
+  
 
   // 3. Must have uploaded file
   if (!req.file) {
@@ -125,6 +80,7 @@ const authRegister = async (req, res) => {
       profilePicture: uploadResult.secure_url,
       otp,
       otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      authProvider: 'local',
     });
 
     await user.save();
@@ -180,16 +136,8 @@ const authLogin = async (req, res) => {
 
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
 
-    const cookieConfig = {
-      httpOnly: true,
-      sameSite: NODE_ENV === 'production' ? 'none' : 'strict',
-      secure: NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    };
-
     return res
-      .cookie('accessToken', token, cookieConfig)
+      .cookie('accessToken', token, COOKIE_CONFIG)
       .status(202)
       .send({
         error: false,
@@ -222,32 +170,50 @@ const authStatus = async (req, res) => {
 };
 
 const verification = async (req, res) => {
-  const {username, otp} = req.body
-  const user = await User.findOne({username})
+  try {
+    const { otp, userId } = req.body;
 
-  console.log(user)
-  if (!user || !user.otp || !user.otpExpiresAt) {
-    return res.status(400).send({ error: true, message: "OTP not set or expired!" });
+    // Basic input validation
+    if (!otp || !userId) {
+      return res.status(400).json({ error: true, message: 'OTP and User ID are required.' });
+    }
+
+    const user = await User.findById(userId);
+
+    // Check if user and OTP data exist
+    if (!user || !user.otp || !user.otpExpiresAt) {
+      return res.status(400).json({ error: true, message: 'OTP not set or expired.' });
+    }
+
+    // Check if OTP matches
+    if (user.otp !== otp) {
+      return res.status(400).json({ error: true, message: 'Invalid OTP.' });
+    }
+
+    // Check if OTP is expired
+    if (user.otpExpiresAt < new Date()) {
+      return res.status(400).json({ error: true, message: 'OTP expired.' });
+    }
+
+    // Clear OTP fields
+    user.otp = null;
+    user.otpExpiresAt = null;
+    await user.save();
+
+    // Generate JWT
+    const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+
+    // Set token in cookie
+    res.cookie('accessToken', token, COOKIE_CONFIG);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Email verified and user logged in.',
+    });
+  } catch (err) {
+    console.error('Verification error:', err);
+    return res.status(500).json({ error: true, message: 'Internal server error.' });
   }
-  
-  if (user.otp !== otp) {
-    return res.status(400).send({ error: true, message: "Invalid OTP!" });
-  }
-  
-  if (user.otpExpiresAt < new Date()) {
-    return res.status(400).send({ error: true, message: "OTP expired!" });
-  }
-
-  user.otp = null;
-  user.otpExpiresAt = null;
-  await user.save();
-
-  const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-  res
-    .cookie('accessToken', token, COOKIE_CONFIG)
-    .send({ error: false, message: 'Email verified—logged in!', user: { ...user._doc, password: undefined } });
-
-  return res.send({ error: false, message: "OTP verified successfully!" });
 }
 
 
@@ -257,5 +223,4 @@ module.exports = {
     authLogout,
     authStatus,
     verification,
-    googleLogin
 };

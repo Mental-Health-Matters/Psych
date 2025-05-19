@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
+    unique: true,
+    lowercase: true,
     validate: [validator.isLowercase, 'Username must be in lowercase'],
     minlength: [3, 'Minimum Username length is 3 characters'],
     maxlength: [20, 'Maximum Username length is 20 characters'],
@@ -40,7 +42,7 @@ const userSchema = new mongoose.Schema({
   },
   authProvider: {
     type: String,
-    enum: ['google', 'local'],  // You can add other providers if needed
+    enum: ['google', 'local'],
     required: [true, 'Authentication provider is required'],
   },
   otp: String,
