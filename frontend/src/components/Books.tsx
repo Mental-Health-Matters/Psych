@@ -6,22 +6,24 @@ export default function Books() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
       <BookCard
-        title="JavaScript: The Good Parts"
-        overview="A detailed exploration of JavaScript's best features..."
-        author="Douglas Crockford"
-        image="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=800"
+        title="The Body Keeps the Score"
+        overview="How trauma reshapes the body and brain—and what you can do to heal."
+        author="Bessel van der Kolk"
+        image="https://covers.openlibrary.org/b/isbn/9780143127741-M.jpg"
       />
+
       <BookCard
-        title="Clean Code"
-        overview="A handbook of agile software craftsmanship..."
-        author="Robert C. Martin"
-        image="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800"
+        title="Lost Connections"
+        overview="Uncovering the real causes of depression—and the unexpected solutions."
+        author="Johann Hari"
+        image="https://covers.openlibrary.org/b/isbn/9781632868305-M.jpg"
       />
+
       <BookCard
-        title="Design Patterns"
-        overview="Elements of reusable object-oriented software..."
-        author="Gang of Four"
-        image="https://images.unsplash.com/photo-1589998059171-988d887df646?auto=format&fit=crop&w=800"
+        title="Feeling Good: The New Mood Therapy"
+        overview="A groundbreaking self-help work that shows how to combat depression naturally."
+        author="David D. Burns"
+        image="https://covers.openlibrary.org/b/isbn/9780380810338-M.jpg"
       />
     </div>
   );
@@ -35,7 +37,7 @@ function BookCard({ title, overview, author, image }: {
 }) {
   return (
     <motion.div whileHover={{ scale: 1.03 }} className="bg-white rounded-xl shadow-lg overflow-hidden group">
-      <div className="h-48 overflow-hidden">
+      <div className="h-auto overflow-hidden">
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
       </div>
       <div className="p-6">

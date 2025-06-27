@@ -6,19 +6,30 @@ export default function Articles() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
       <ArticleCard
-        title="The Future of Web Development"
-        summary="Exploring the latest trends and technologies shaping the future of web development..."
-        author="John Doe"
-        date="Mar 15, 2024"
-        image="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800"
+        title="Understanding the Pillars of Mental Wellness"
+        summary="Explore the core pillars—like emotional, physical, and social wellness—that sustain mental health and life balance."
+        author="Dr. Priya Kapoor"
+        date="Jun 5, 2025"
+        image="https://thumbs.dreamstime.com/b/circular-wellness-wheel-seven-colored-segments-each-labeled-nonsensical-altered-terms-colors-range-red-orange-382404482.jpg"
       />
       <ArticleCard
-        title="Mastering React Hooks"
-        summary="A comprehensive guide to using React Hooks effectively in your applications..."
-        author="Jane Smith"
-        date="Mar 14, 2024"
-        image="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800"
+        title="Pathways to Mental Wellness: Activity, Rest & Connection"
+        summary="Discover four holistic strategies—creativity, nourishment, rest, and meaning—that support mental well-being every day."
+        author="Emily Santos"
+        date="May 20, 2025"
+        image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrzHbOWXAMQ13jiU_XEZXMpeQduRLLL6Penw&s"
       />
+
+      <ArticleCard
+        title="Building Resilience Through Everyday Mindfulness"
+        summary="A practical guide to integrating mindfulness practices into daily routines to reduce stress and build emotional resilience."
+        author="Aisha Khan"
+        date="Jun 20, 2025"
+        image="https://blogs.resiliencyprogram.com/wp-content/uploads/2024/07/8.-Mindfulness-and-meditation-1.jpg"
+      />
+
+
+
     </div>
   );
 }

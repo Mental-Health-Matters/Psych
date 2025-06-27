@@ -103,9 +103,10 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
-          className="bg-white rounded-xl p-8 max-w-md w-full"
+          className="bg-white p-8 max-w-md w-full max-h-[93vh] overflow-y-auto"
         >
           <div className="flex justify-between items-center mb-6">
+            <br />
             <h3 className="text-2xl font-bold">Create Account</h3>
             <button
               onClick={() => setModalOpen(null)}
