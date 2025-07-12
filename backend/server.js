@@ -23,12 +23,13 @@ app.use(compression());
 
 // CORS setup (do not change existing code)
 app.use(cors({
-    origin: [
-        'http://localhost:5173', 
-        'https://reimagined-spork-x55pw7957w57cp6w6-5173.app.github.dev'  // Add GitHub Codespace URL here
-    ], 
-    credentials: true  // Allow cookies to be sent in cross-origin requests
+  origin: [
+    'https://psych-xi.vercel.app',    
+    'http://localhost:5173'           
+  ],
+  credentials: true
 }));
+
 
 // Routes
 app.get('/', (request, response) => {

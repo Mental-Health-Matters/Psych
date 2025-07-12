@@ -36,7 +36,7 @@ function EditProfileDetails ({ setIsModalOpen } : EditProfileDetailsProps) {
   useEffect(() => {
   async function getUserData(userId: string) {
     
-      const response = await axios.get(`http://localhost:3000/api/users/${userId}`)
+      const response = await axios.get(`https://psych-9vpb.onrender.com/api/users/${userId}`)
       const userData = response.data.data.user;
       const questionnaire = response.data.data.questionnaire;
 
@@ -113,7 +113,7 @@ function EditProfileDetails ({ setIsModalOpen } : EditProfileDetailsProps) {
     });
 
     const details = await axios.patch(
-      `http://localhost:3000/api/users/${userId}`,
+      `https://psych-9vpb.onrender.com/api/users/${userId}`,
       {
         profile: profile,
         questionnaire: sendQuestions
@@ -121,9 +121,11 @@ function EditProfileDetails ({ setIsModalOpen } : EditProfileDetailsProps) {
       {
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        withCredentials: true  // Add this if your backend uses cookies (auth/session)
       }
-    )
+    );
+
 
     setIsModalOpen(false)
 
