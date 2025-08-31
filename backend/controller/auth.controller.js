@@ -56,7 +56,7 @@ const authRegister = async (req, res) => {
         // Use Promise.race to timeout cloudinary upload
         const uploadPromise = cloudinary.uploader.upload(fileUri.content, {
           resource_type: 'image',
-          public_id: `user_profiles/${userId}`, // fixed ID (user-specific)
+          public_id: `user_profiles/${username}`, // fixed ID (user-specific)
           overwrite: true,                       // replaces old image
           invalidate: true,                        // clears cached version
           timeout: 10000, // 10 second timeout
