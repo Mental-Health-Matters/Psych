@@ -10,7 +10,8 @@ const authRoutes = require('./route/authenticate.route');
 const questionnaireRoutes = require('./route/questionnaire.route')
 const appointmentRoutes = require('./route/appointments.route')
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
 
 // App
 const app = express();

@@ -47,6 +47,8 @@ export default function EditProfileDetails({
   const token = Cookies.get("accessToken") || localStorage.getItem("accessToken") || null;
   const decodedToken = token ? jwtDecode<DecodedToken>(token) : null;
   const userId = decodedToken ? decodedToken["_id"] : null;
+  console.log("Decoded token:", decodedToken);
+
 
   // Fetch user data (profile + questionnaire)
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function EditProfileDetails({
     let cancelled = false;
     const getUserData = async (id: string) => {
       try {
-        const response = await axios.get(`https://psych-9vpb.onrender.com/api/users/${id}`, {
+        const response = await axios.get(`https://psych-9vpb.onrender.com/api/users/${userId}`, {
           withCredentials: true,
         });
         if (cancelled) return;
@@ -63,6 +65,7 @@ export default function EditProfileDetails({
         const userData = response.data?.data?.user;
         const questionnaire = response.data?.data?.questionnaire;
 
+        console.log("User API response:", response.data);
         setProfile({
           email: userData?.email ?? "",
           username: userData?.username ?? "",

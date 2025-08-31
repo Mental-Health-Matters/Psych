@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 
 interface NavbarProps {
   setIsSection: React.Dispatch<React.SetStateAction<'MainWindow' | 'Blogs' | 'Find_therapist'>>;
-  profileImageUrl?: string;  // URL of the user's profile picture
+  profileImageUrl?: string;
 }
 
 export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
