@@ -27,7 +27,7 @@ export default function OTPVerification({ userId, setModalOpen }: OTPVerificatio
       setLoading(true);
       setError("");
 
-      const response = await axios.post("http://psych-9vpb.onrender.com/api/auth/verify-otp", 
+      const response = await axios.post("https://psych-9vpb.onrender.com/api/auth/verify-otp", 
       { userId, otp },
       { withCredentials: true });
       

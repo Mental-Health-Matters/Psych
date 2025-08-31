@@ -21,7 +21,7 @@ export default function Login({ setModalOpen, setIsLoggedIn, setUserId }: LoginP
   const handleSubmit = async () => {
     try {
       console.log(formData)
-      const res = await axios.post("http://psych-9vpb.onrender.com/api/auth/login", formData, {
+      const res = await axios.post("https://psych-9vpb.onrender.com/api/auth/login", formData, {
         withCredentials: true,
       });
 

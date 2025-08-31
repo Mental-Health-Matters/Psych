@@ -55,7 +55,7 @@ export default function EditProfileDetails({
     let cancelled = false;
     const getUserData = async (id: string) => {
       try {
-        const response = await axios.get(`http://psych-9vpb.onrender.com/api/users/${id}`, {
+        const response = await axios.get(`https://psych-9vpb.onrender.com/api/users/${id}`, {
           withCredentials: true,
         });
         if (cancelled) return;
@@ -199,7 +199,7 @@ export default function EditProfileDetails({
 
       // PATCH to server (server should upload to Cloudinary and return updated user)
       const response = await axios.patch(
-        `http://psych-9vpb.onrender.com/api/users/${userId}`,
+        `https://psych-9vpb.onrender.com/api/users/${userId}`,
         { profile: updatedProfile, questionnaire: sendQuestions },
         { headers: { "Content-Type": "application/json" }, withCredentials: true }
       );
