@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -7,6 +7,11 @@ import {
   Users,
   MessageCircle,
 } from 'lucide-react';
+
+interface FeaturesSectionProps {
+  className?: string;
+}
+
 
 const features = [
   {
@@ -36,7 +41,7 @@ const features = [
   },
 ];
 
-export default function FeaturesSection() {
+const FeaturesSection = forwardRef<HTMLDivElement, FeaturesSectionProps>(({ className }, ref) => {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1); // 1 for right, -1 for left
 
@@ -46,8 +51,23 @@ export default function FeaturesSection() {
       setIndex((prev) => (prev + 1) % features.length);
     }, 6000); // Increased interval time to 6 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [features.length]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        setDirection(1);
+        setIndex((prev) => (prev + 1) % features.length);
+      } else if (e.key === 'ArrowLeft') {
+        setDirection(-1);
+        setIndex((prev) => (prev - 1 + features.length) % features.length);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [features.length]);
+
+  
   const handleNext = () => {
     setDirection(1);
     setIndex((prev) => (prev + 1) % features.length);
@@ -232,4 +252,6 @@ export default function FeaturesSection() {
       </div>
     </div>
   );
-}
+})
+
+export default FeaturesSection;

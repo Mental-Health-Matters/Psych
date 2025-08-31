@@ -1,4 +1,4 @@
-const appointmentBookingMailStudent = require('../utils/appointmentBookingMail')
+const { appointmentBookingMailStudent, appointmentBookingMailPsychiatrist } = require('../utils/appointmentBookingMail')
 const mailService = require('../utils/mailService')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user.model')
@@ -10,6 +10,7 @@ const confirmation = async (req, res) => {
     const docemail = doctor.email
 
     const token = req.cookies.accessToken;
+    console.log("Token from cookies:", token);
     if (!token) {
         throw customException("Not logged in", 401);
     }
@@ -31,10 +32,11 @@ const confirmation = async (req, res) => {
     const {studentSubject, studentText} = appointmentBookingMailStudent(name, selectedDate, selectedTime, fee, specialization, username)
 
     const studentName = firstName + " " + lastName
-    const {psychSubject, psychText} = appointmentBookingMailPsych(studentName, selectedDate, selectedTime, questionnaireResponses)
+    const {psychSubject, psychText} = appointmentBookingMailPsychiatrist(studentName, selectedDate, selectedTime, questionnaireResponses)
     const mailStudent = await mailService(email, studentSubject, studentText)
     const mailPsychiatrist = await mailService(docemail, psychSubject, psychText)
     
+    console.log(mailStudent)
     if(!mailStudent.success) {
         throw customException("Unable to send email for appointment to student", 500)
     }

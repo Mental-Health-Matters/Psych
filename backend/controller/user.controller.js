@@ -1,6 +1,8 @@
 const  User  = require('../models/user.model');
 const  CustomException  = require('../utils/CustomException');
 const Questionnaire = require('../models/questionnaire.model');
+const cloudinary = require('../utils/cloudinary');
+const getDataUri = require('../utils/dataUri');
 
 const deleteUser = async (request, response) => {
     const { _id } = request.params;
@@ -52,7 +54,29 @@ const updateProfile = async (req, res) => {
             ]
         }
 
-        
+        try {
+            const uploadResult = await Promise.race([
+                cloudinary.uploader.upload(profile.profilePicture, {
+                resource_type: "image",
+                public_id: `user_profiles/${userId}`, // fixed ID (user-specific)
+                overwrite: true,                       // replaces old image
+                invalidate: true                       // clears cached version
+                }),
+                new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Upload timeout")), 10000)
+                ),
+            ]);
+
+            profilePictureUrl = uploadResult?.secure_url;
+            } catch (uploadError) {
+            console.warn("Image upload failed, proceeding without profile picture:", uploadError);
+            }
+
+
+        if (profilePictureUrl) {
+            profile.profilePicture = profilePictureUrl;
+        }
+
         const user = await User.findByIdAndUpdate(userId, profile, {new: true, runValidators:true})
         const ques = await Questionnaire.findOneAndUpdate({userId: userId}, {
             $set: {
@@ -86,7 +110,7 @@ const getUserDetails = async (req, res) => {
 
         const details = await User.findById(userId)
         const questionnaire = await Questionnaire.findOne({ userId });
-
+        
         
         if (!details || !questionnaire) {
             throw CustomException("User not found", 404);

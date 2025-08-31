@@ -237,13 +237,18 @@ export default function PsychWebsite({setIsLoggedIn} : WelcomePageProps) {
 </div>
 
       {/* Features Section */}
-      <FeaturesSection />
+      <div ref={featuresRef} id="features">
+        <FeaturesSection />
+      </div>
+
 
       {/* Testimonials */}
       <Testimonials />
 
       {/* FAQ Section */}
-      <FAQ ref={faqRef} />
+      <div ref={faqRef}>
+        <FAQ />
+      </div>
 
       {/* CTA Section */}
       <div className="py-16 bg-gradient-to-br from-[#4A90E2]/20 to-blue-100">

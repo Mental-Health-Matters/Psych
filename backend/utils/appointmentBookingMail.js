@@ -1,7 +1,7 @@
 function appointmentBookingMailStudent(name, selectedDate, selectedTime, fee, specialization) {
-    const subject = `Appointment Confirmation with ${name}`
+    const studentSubject = `Appointment Confirmation with ${name}`
 
-    const text = `Dear Student,
+    const studentText = `Dear Student,
 
         This is to confirm that your appointment has been successfully booked with ${name}, a specialist in ${specialization}.
 
@@ -16,14 +16,14 @@ function appointmentBookingMailStudent(name, selectedDate, selectedTime, fee, sp
 
         Best regards,  
         Psych Team`
-    return {subject, text}
+    return {studentSubject, studentText}
 }
 
 
 function appointmentBookingMailPsychiatrist(studentName, selectedDate, selectedTime, questionnaireResponses) {
-    const subject = `New Appointment Booked - ${studentName} on ${selectedDate}`;
+    const Psychsubject = `New Appointment Booked - ${studentName} on ${selectedDate}`;
   
-    const text = `Dear Doctor,
+    const Psychtext = `Dear Doctor,
   
   A new appointment has been booked with you for a student requiring consultation.
   
@@ -39,8 +39,8 @@ function appointmentBookingMailPsychiatrist(studentName, selectedDate, selectedT
   
   Best regards,  
   Psych Team`;
-  
-    return { subject, text };
+
+    return { Psychsubject, Psychtext };
   }
   
 

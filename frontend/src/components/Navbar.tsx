@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EditProfileDetails from './EditProfileDetails';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 interface NavbarProps {
   setIsSection: React.Dispatch<React.SetStateAction<'MainWindow' | 'Blogs' | 'Find_therapist'>>;
@@ -7,17 +10,43 @@ interface NavbarProps {
 }
 
 export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
+  const token = Cookies.get("accessToken");
+  const decodedToken = token ? jwtDecode(token) : null;
+  const userId = decodedToken ? decodedToken["_id"] : null;
+
+  const defaultAvatar = 'https://i.pravatar.cc/300?img=8';
+  const [imageUrl, setImageUrl] = useState(defaultAvatar)
+
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (!userId) return;
+      try {
+        const res = await axios.get(`http://localhost:3000/api/users/${userId}`, { withCredentials: true });
+        const image = res.data?.data?.user?.profilePicture;
+        if (image) setImageUrl(`${image}?t=${Date.now()}`);
+      } catch (err) {
+        console.error('Failed to fetch user image:', err);
+      }
+    };
+    fetchImage();
+  }, [userId]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Default avatar if none provided
-  const defaultAvatar = 'https://i.pravatar.cc/300?img=8';
-  const avatarSrc = profileImageUrl || defaultAvatar;
-
-  // Dummy user data for profile details
-  const userData = {
-    username: 'john_doe', // Example username
-    email: 'john@example.com', // Example email
-    profilePictureUrl: profileImageUrl || defaultAvatar, // Profile picture URL
+  const handleProfileUpdated = (newImageUrl?: string) => {
+    if (newImageUrl) {
+      setImageUrl(`${newImageUrl}?t=${Date.now()}`); // cache-bust
+    } else {
+      // if server didn't return url, force refetch (optional)
+      if (userId) {
+        axios.get(`http://localhost:3000/api/users/${userId}`, { withCredentials: true })
+          .then(res => {
+            const image = res.data?.data?.user?.profilePicture;
+            if (image) setImageUrl(`${image}?t=${Date.now()}`);
+          }).catch(console.error);
+      }
+    }
   };
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -61,7 +90,7 @@ export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
           <div className="flex items-center">
             {/* Profile picture circle with blue border */}
             <img
-              src={avatarSrc}
+              src={imageUrl}
               alt="User Profile"
               className="w-10 h-10 rounded-full border-2 border-blue-500 object-cover cursor-pointer"
               onClick={() => setIsModalOpen(true)}  // Open modal on profile picture click
@@ -73,6 +102,7 @@ export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
       {isModalOpen && (
         <EditProfileDetails
           setIsModalOpen={setIsModalOpen}
+          onProfileUpdated={handleProfileUpdated} // << pass callback
         />
       )}
     </nav>
