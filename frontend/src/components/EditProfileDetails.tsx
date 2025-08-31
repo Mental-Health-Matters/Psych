@@ -283,7 +283,7 @@ export default function EditProfileDetails({
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group">
                   <img
-                    src={previewUrl || profile.profilePicture || "/default-avatar.png"}
+                    src={previewUrl || profile.profilePicture}
                     alt="Profile"
                     className="w-32 h-32 rounded-full object-cover border-4 border-blue-200 transition-transform hover:scale-105"
                   />
