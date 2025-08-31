@@ -115,7 +115,7 @@ export default function Register({ setModalOpen, setUserId }: RegisterProps) {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/register",
+        "http://psych-9vpb.onrender.com/api/auth/register",
         data,
         {
           headers: { "Content-Type": "multipart/form-data" },

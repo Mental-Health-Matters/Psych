@@ -22,7 +22,7 @@ export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
     const fetchImage = async () => {
       if (!userId) return;
       try {
-        const res = await axios.get(`http://localhost:3000/api/users/${userId}`, { withCredentials: true });
+        const res = await axios.get(`http://psych-9vpb.onrender.com/api/users/${userId}`, { withCredentials: true });
         const image = res.data?.data?.user?.profilePicture;
         if (image) setImageUrl(`${image}?t=${Date.now()}`);
       } catch (err) {
@@ -40,7 +40,7 @@ export default function Navbar({ setIsSection, profileImageUrl }: NavbarProps) {
     } else {
       // if server didn't return url, force refetch (optional)
       if (userId) {
-        axios.get(`http://localhost:3000/api/users/${userId}`, { withCredentials: true })
+        axios.get(`http://psych-9vpb.onrender.com/api/users/${userId}`, { withCredentials: true })
           .then(res => {
             const image = res.data?.data?.user?.profilePicture;
             if (image) setImageUrl(`${image}?t=${Date.now()}`);

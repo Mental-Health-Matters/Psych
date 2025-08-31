@@ -38,7 +38,7 @@ export default function DoctorDetail({ doctor, onBack }: DoctorDetailProps) {
       selectedTime
     }
 
-    const res = await axios.post('http://localhost:3000/api/appointments/confirmation', data, {
+    const res = await axios.post('http://psych-9vpb.onrender.com/api/appointments/confirmation', data, {
       withCredentials: true
     });
 

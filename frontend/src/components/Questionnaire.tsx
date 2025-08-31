@@ -76,7 +76,7 @@ export default function Questionnaire({ setModalOpen, setIsLoggedIn, userId }: Q
     try {
       console.log(questionnairePayload);
       const response = await axios.post(
-        "http://localhost:3000/api/questionnaire",
+        "http://psych-9vpb.onrender.com/api/questionnaire",
         questionnairePayload,
         { headers: { "Content-Type": "application/json" } }
       );
